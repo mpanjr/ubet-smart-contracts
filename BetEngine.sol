@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 contract BetEngine {
-    // --- New Additions Start ---
     enum BetStatus { Unmatched, Matched, Resolved, Cancelled }
 
     struct Bet {
@@ -18,36 +17,58 @@ contract BetEngine {
     }
 
     mapping(uint256 => Bet) public bets;
-    uint256 public nextBetId; // Will be initialized to 0 by default, or set in constructor
-    // --- New Additions End ---
+    uint256 public nextBetId;
 
-    // Existing events - we will update these later when refactoring functions
-    event BetPlaced(address indexed user, uint256 amount, uint256 odds);
+    // --- Updated Event Definition for BetPlaced ---
+    event BetPlaced(uint256 indexed betId, address indexed creator, uint256 indexed marketId, uint256 stake, uint256 odds);
+    // --- Existing events - we will update these later ---
     event BetMatched(address indexed userA, address indexed userB, uint256 amount);
     event BetResolved(address indexed winner, uint256 payout);
 
-    // Existing mapping - this will likely be replaced or refactored when functions are updated
+    // Existing mapping - this will likely be deprecated for bet stakes
     mapping(address => uint256) public balances;
 
-    // --- Constructor to initialize nextBetId (Optional but good practice) ---
     constructor() {
         nextBetId = 1; // Start bet IDs from 1
     }
-    // --- Constructor End ---
 
-    // Existing functions - these will need to be refactored in subsequent steps
-    function placeBet(uint256 _odds) external payable {
+    // --- Refactored placeBet function ---
+    function placeBet(uint256 _marketId, uint256 _odds) external payable {
         require(msg.value > 0, "Bet amount must be greater than zero");
-        balances[msg.sender] += msg.value;
-        emit BetPlaced(msg.sender, msg.value, _odds);
-    }
+        require(_marketId != 0, "Market ID cannot be zero"); // Basic validation for marketId
 
-    function matchBet(address opponent) external payable { // Made payable to accept matcher's stake
+        uint256 currentBetId = nextBetId;
+
+        bets[currentBetId] = Bet({
+            id: currentBetId,
+            creator: msg.sender,
+            matcher: address(0),       // No matcher yet
+            creatorStake: msg.value,   // Creator's stake is the sent value
+            matcherStake: 0,           // No matcher stake yet
+            odds: _odds,
+            marketId: _marketId,
+            status: BetStatus.Unmatched,
+            winner: address(0)         // No winner yet
+        });
+
+        nextBetId++; // Increment for the next bet
+
+        // Emit the updated event
+        emit BetPlaced(currentBetId, msg.sender, _marketId, msg.value, _odds);
+
+        // The old line `balances[msg.sender] += msg.value;` has been removed
+        // as stakes are now managed within the Bet struct.
+    }
+    // --- End of Refactored placeBet function ---
+
+    // Existing matchBet function - needs refactor next
+    function matchBet(address opponent) external payable {
         // Current logic is placeholder and needs complete refactor
         require(balances[msg.sender] > 0 && balances[opponent] > 0, "Both must have placed bets");
         emit BetMatched(msg.sender, opponent, balances[msg.sender]);
     }
 
+    // Existing resolveBet function - needs refactor later
     function resolveBet(address _winner, address _loser) external {
         // Current logic is placeholder and needs complete refactor
         uint256 payout = balances[_loser];
@@ -56,4 +77,3 @@ contract BetEngine {
         emit BetResolved(_winner, payout);
     }
 }
-
