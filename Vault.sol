@@ -1,22 +1,21 @@
-
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.0;
 
 contract Vault {
-    mapping(address => uint) public savings;
-
-    event Deposited(address indexed user, uint amount);
-    event Withdrawn(address indexed user, uint amount);
+    mapping(address => uint256) public stakes;
 
     function deposit() external payable {
-        savings[msg.sender] += msg.value;
-        emit Deposited(msg.sender, msg.value);
+        require(msg.value > 0, "Must send ETH");
+        stakes[msg.sender] += msg.value;
     }
 
-    function withdraw(uint amount) external {
-        require(savings[msg.sender] >= amount, "Insufficient balance");
-        savings[msg.sender] -= amount;
+    function withdraw(uint256 amount) external {
+        require(stakes[msg.sender] >= amount, "Insufficient funds");
+        stakes[msg.sender] -= amount;
         payable(msg.sender).transfer(amount);
-        emit Withdrawn(msg.sender, amount);
+    }
+
+    function balanceOf(address user) external view returns (uint256) {
+        return stakes[user];
     }
 }
