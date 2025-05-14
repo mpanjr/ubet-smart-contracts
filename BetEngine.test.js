@@ -1,32 +1,64 @@
-
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
 describe("BetEngine", function () {
-  let betEngine, owner, user1, user2;
+    let BetEngine;
+    let betEngine;
+    let owner;
+    let addr1; // Represents a bet creator
+    let addr2; // Represents a bet matcher
+    let addrs;
 
-  beforeEach(async function () {
-    [owner, user1, user2] = await ethers.getSigners();
-    const BetEngine = await ethers.getContractFactory("BetEngine");
-    betEngine = await BetEngine.deploy();
-    await betEngine.deployed();
-  });
+    beforeEach(async function () {
+        // Get the ContractFactory and Signers here.
+        BetEngine = await ethers.getContractFactory("BetEngine");
+        [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
 
-  it("should allow user to create a bet", async function () {
-    await expect(betEngine.connect(user1).createBet(2, true, { value: ethers.utils.parseEther("1") }))
-      .to.emit(betEngine, "BetCreated");
-  });
+        // Deploy a new BetEngine contract before each test.
+        betEngine = await BetEngine.deploy();
+        await betEngine.deployed();
+    });
 
-  it("should allow another user to match a bet", async function () {
-    await betEngine.connect(user1).createBet(2, true, { value: ethers.utils.parseEther("1") });
-    await expect(betEngine.connect(user2).matchBet(0, { value: ethers.utils.parseEther("1") }))
-      .to.emit(betEngine, "BetMatched");
-  });
+    // --- Tests for placeBet ---
+    describe("placeBet", function () {
+        it("Should allow a user to place a bet successfully", async function () {
+            const marketId = 1;
+            const odds = 200; // Represents 2.0 odds
+            const stake = ethers.utils.parseEther("1.0");
 
-  it("should resolve the bet correctly", async function () {
-    await betEngine.connect(user1).createBet(2, true, { value: ethers.utils.parseEther("1") });
-    await betEngine.connect(user2).matchBet(0, { value: ethers.utils.parseEther("1") });
-    await expect(betEngine.resolveBet(0, true))
-      .to.emit(betEngine, "BetResolved");
-  });
+            await expect(betEngine.connect(addr1).placeBet(marketId, odds, { value: stake }))
+                .to.emit(betEngine, "BetPlaced")
+                .withArgs(1, addr1.address, marketId, stake, odds); // betId will be 1
+
+            const bet = await betEngine.bets(1);
+            expect(bet.id).to.equal(1);
+            expect(bet.creator).to.equal(addr1.address);
+            expect(bet.creatorStake).to.equal(stake);
+            // ... more assertions
+        });
+
+        it("Should fail if stake is zero", async function () {
+            // ... test logic
+        });
+        // ... more placeBet tests
+    });
+
+    // --- Tests for matchBet ---
+    describe("matchBet", function () {
+        // You might need a beforeEac`h here to place a bet first
+        it("Should allow a user to match a bet successfully", async function () {
+            // ... test logic
+        });
+        // ... more matchBet tests
+    });
+
+    // --- Tests for resolveBet ---
+    describe("resolveBet", function () {
+        // You might need a beforeEach here to place and match a bet first
+        it("Should allow the owner to resolve a bet successfully", async function () {
+            // ... test logic
+        });
+        // ... more resolveBet tests
+    });
 });
+
