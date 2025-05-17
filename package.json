@@ -1,0 +1,20 @@
+{
+  "name": "ubet-smart-contracts",
+  "version": "1.0.0",
+  "description": "Smart contracts for UBet P2P betting demo",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mpanjr/ubet-smart-contracts"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "BetEngine.test.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.24.0"
+  }
+}
